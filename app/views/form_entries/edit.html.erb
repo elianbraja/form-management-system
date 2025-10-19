@@ -1,0 +1,96 @@
+<div class="form-page">
+  <div class="page-header">
+    <h1>Edit Form Entry: <%= @form.title %></h1>
+    <div class="form-actions">
+      <%= link_to "View Form", form_path(@form), class: "btn btn-outline" %>
+      <%= link_to "Back to Forms", forms_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: @form_entry_service, url: form_form_entry_path(@form, @form_entry), method: :patch, local: true, id: "form-entry-form") do |form| %>
+      
+      <% if @form_entry_service.errors.any? %>
+        <div class="error-messages">
+          <h3><%= pluralize(@form_entry_service.errors.count, "error") %> prohibited this form entry from being saved:</h3>
+          <ul>
+            <% @form_entry_service.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% @form.form_fields.each_with_index do |field, index| %>
+        <div class="field-item">
+          <div class="form-group">
+            <label for="field_<%= field.id %>">
+              <%= field.name %>
+              <% if field.required? %>
+                <span class="required-indicator">*</span>
+              <% end %>
+            </label>
+            
+            <%= hidden_field_tag "form_entries_update_service[field_values][#{index}][form_field_id]", field.id %>
+            
+            <% existing_value = @form_entry.field_values.find_by(form_field: field)&.value %>
+            
+            <% case field.field_type %>
+            <% when 'string' %>
+              <%= text_field_tag "form_entries_update_service[field_values][#{index}][value]", 
+                  existing_value, 
+                  class: "form-control", 
+                  id: "field_#{field.id}",
+                  placeholder: "Enter #{field.name.downcase}",
+                  required: field.required?,
+                  minlength: field.validations['min_length'],
+                  maxlength: field.validations['max_length'] %>
+            <% when 'integer' %>
+              <%= number_field_tag "form_entries_update_service[field_values][#{index}][value]", 
+                  existing_value, 
+                  class: "form-control", 
+                  id: "field_#{field.id}",
+                  placeholder: "Enter #{field.name.downcase}",
+                  required: field.required?,
+                  min: field.validations['min_value'],
+                  max: field.validations['max_value'] %>
+            <% when 'datetime' %>
+              <%= datetime_local_field_tag "form_entries_update_service[field_values][#{index}][value]", 
+                  existing_value, 
+                  class: "form-control", 
+                  id: "field_#{field.id}",
+                  required: field.required? %>
+            <% end %>
+            
+            <% if field.validations.any? %>
+              <div class="field-help">
+                <% if field.field_type == 'string' %>
+                  <% if field.validations['min_length'].present? && field.validations['max_length'].present? %>
+                    Length: <%= field.validations['min_length'] %>-<%= field.validations['max_length'] %> characters
+                  <% elsif field.validations['min_length'].present? %>
+                    Minimum <%= field.validations['min_length'] %> characters
+                  <% elsif field.validations['max_length'].present? %>
+                    Maximum <%= field.validations['max_length'] %> characters
+                  <% end %>
+                <% elsif field.field_type == 'integer' %>
+                  <% if field.validations['min_value'].present? && field.validations['max_value'].present? %>
+                    Range: <%= field.validations['min_value'] %> to <%= field.validations['max_value'] %>
+                  <% elsif field.validations['min_value'].present? %>
+                    Minimum value: <%= field.validations['min_value'] %>
+                  <% elsif field.validations['max_value'].present? %>
+                    Maximum value: <%= field.validations['max_value'] %>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="form-actions">
+        <%= form.submit "Update Form Entry", class: "btn btn-primary" %>
+        <%= link_to "Cancel", form_path(@form), class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
