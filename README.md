@@ -1,24 +1,61 @@
-# README
+# Form Management System
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A Rails-based web application for creating, managing, and collecting form submissions.
 
-Things you may want to cover:
+## Features
 
-* Ruby version
+- **User Authentication**: Sign up, sign in, and user management with Devise
+- **Form Builder**: Create custom forms with various field types
+- **Form Submissions**: Collect and manage form entries
+- **CSV Export**: Download form submissions as CSV files
+- **Authorization**: Secure access control with Pundit
 
-* System dependencies
+## Tech Stack
 
-* Configuration
+- **Backend**: Ruby on Rails 8.0
+- **Database**: PostgreSQL
+- **Authentication**: Devise
+- **Authorization**: Pundit
+- **Code Quality**: RuboCop
 
-* Database creation
+## Getting Started
 
-* Database initialization
+### Prerequisites
 
-* How to run the test suite
+- Ruby 3.0+
+- PostgreSQL
+- Rails 8.0+
 
-* Services (job queues, cache servers, search engines, etc.)
+### Installation
 
-* Deployment instructions
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   bundle install
+   ```
 
-* ...
+3. Setup the database:
+   ```bash
+   rails db:create
+   rails db:migrate
+   ```
+
+4. Start the server:
+   ```bash
+   rails server
+   ```
+
+5. Visit `http://localhost:3000`
+
+## Usage
+
+1. **Sign Up**: Create a new account
+2. **Create Forms**: Build custom forms with different field types
+3. **Share Forms**: Forms are accessible to authenticated users
+4. **Collect Submissions**: Users can fill out and submit forms
+5. **Export Data**: Download submissions as CSV files
+```
+
+## License
+
+This project is private and proprietary.
