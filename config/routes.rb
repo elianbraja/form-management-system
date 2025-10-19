@@ -3,15 +3,15 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: {
     registrations: 'users/registrations'
-  }, skip: [:confirmations, :passwords, :unlocks]
-  
+  }, skip: %i[confirmations passwords unlocks]
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root 'forms#index'
-  
+
   # Protected routes (require authentication)
   authenticated :user do
     resources :forms do
-      resources :form_entries, only: [:new, :create, :edit, :update] do
+      resources :form_entries, only: %i[new create edit update] do
         collection do
           get :csv_export, defaults: { format: :csv }
         end
