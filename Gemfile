@@ -21,11 +21,14 @@ gem 'devise'
 # Authorization
 gem 'pundit'
 
+# CSV generation
+gem 'csv'
+
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', require: false
 
 group :development, :test do
-  gem 'debug', platforms: %i[mri windows], require: 'debug/prelude'
+  gem 'debug', platforms: %i[mri mingw x64_mingw], require: 'debug/prelude'
   gem 'factory_bot_rails'
   gem 'rspec-rails'
   gem 'rubocop', require: false
