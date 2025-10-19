@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
-  devise :database_authenticatable, :registerable,
-         :rememberable, :validatable
+  # Only include essential Devise modules for sign in/sign up
+  devise :database_authenticatable, :registerable, :rememberable, :validatable
 
   has_many :forms, dependent: :destroy
   has_many :form_entries, dependent: :destroy
