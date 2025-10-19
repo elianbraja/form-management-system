@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class FormPolicy < ApplicationPolicy
   class Scope < ApplicationPolicy::Scope
     def resolve

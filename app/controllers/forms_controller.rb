@@ -1,30 +1,25 @@
-# frozen_string_literal: true
-
 class FormsController < ApplicationController
   # Skip authentication for index action (shows welcome page for non-authenticated users)
   skip_before_action :authenticate_user!, only: [:index]
-
-  before_action :set_form, only: %i[show edit update destroy]
-  before_action :authorize_form_access, only: %i[show edit update destroy]
-  before_action :check_form_editable, only: %i[edit update]
+  
+  before_action :set_form, only: [:show, :edit, :update, :destroy]
+  before_action :authorize_form_access, only: [:show, :edit, :update, :destroy]
+  before_action :check_form_editable, only: [:edit, :update]
 
   def index
     @forms = policy_scope(Form).order(created_at: :desc) if user_signed_in?
   end
 
-  def show; end
+  def show
+  end
 
   def new
     @form_service = Forms::CreateService.new(user_id: current_user.id)
   end
 
-  def edit
-    @form_service = Forms::UpdateService.new(@form, title: @form.title)
-  end
-
   def create
     @form_service = Forms::CreateService.new(form_service_params)
-
+    
     if @form_service.call
       redirect_to @form_service.form, notice: 'Form was successfully created.'
     else
@@ -32,9 +27,13 @@ class FormsController < ApplicationController
     end
   end
 
+  def edit
+    @form_service = Forms::UpdateService.new(@form, title: @form.title)
+  end
+
   def update
     @form_service = Forms::UpdateService.new(@form, form_update_service_params)
-
+    
     if @form_service.call
       redirect_to @form, notice: 'Form was successfully updated.'
     else
@@ -59,23 +58,22 @@ class FormsController < ApplicationController
 
   def check_form_editable
     return if @form.editable?
-
-    redirect_to @form,
-                alert: 'This form cannot be edited because it has existing entries. To maintain data consistency, forms with entries are locked from editing.'
+    
+    redirect_to @form, alert: 'This form cannot be edited because it has existing entries. To maintain data consistency, forms with entries are locked from editing.'
   end
 
   def form_service_params
-    params.expect(
-      forms_create_service: [:title,
-                             :user_id,
-                             { fields: %i[name field_type required min_length max_length min_value max_value] }]
+    params.require(:forms_create_service).permit(
+      :title, 
+      :user_id, 
+      fields: [:name, :field_type, :required, :min_length, :max_length, :min_value, :max_value]
     )
   end
 
   def form_update_service_params
-    params.expect(
-      forms_update_service: [:title,
-                             { fields: %i[name field_type required min_length max_length min_value max_value] }]
+    params.require(:forms_update_service).permit(
+      :title, 
+      fields: [:name, :field_type, :required, :min_length, :max_length, :min_value, :max_value]
     )
   end
 end

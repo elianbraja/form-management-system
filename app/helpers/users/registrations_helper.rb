@@ -1,6 +1,2 @@
-# frozen_string_literal: true
-
-module Users
-  module RegistrationsHelper
-  end
+module Users::RegistrationsHelper
 end

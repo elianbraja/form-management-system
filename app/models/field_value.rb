@@ -11,7 +11,7 @@ class FieldValue < ApplicationRecord
 
   def required_field_validation
     return unless form_field.required
-    return if value.present?
+    return unless value.blank?
 
     errors.add(:value, "can't be blank")
   end

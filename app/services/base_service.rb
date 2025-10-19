@@ -26,12 +26,11 @@ class BaseService
   protected
 
   def execute
-    raise NotImplementedError, 'Subclasses must implement #execute'
+    raise NotImplementedError, "Subclasses must implement #execute"
   end
 
   def normalize_array_or_hash(data)
     return [] if data.blank?
-
     data.is_a?(Hash) ? data.values : data
   end
 
