@@ -1,63 +1,67 @@
-class FormEntries::CreateService < BaseService
-  include FieldValidation
+# frozen_string_literal: true
 
-  attribute :form
-  attribute :user
-  attribute :field_values, default: -> { [] }
-  attr_accessor :form_entry
+module FormEntries
+  class CreateService < BaseService
+    include FieldValidation
 
-  validates :form, presence: true
-  validates :user, presence: true
-  validate :validate_field_values
+    attribute :form
+    attribute :user
+    attribute :field_values, default: -> { [] }
+    attr_accessor :form_entry
 
-  def initialize(attributes = {})
-    super
-    @form_entry = nil
-    
-    # Convert field_values hash to array if needed
-    @field_values = normalize_array_or_hash(@field_values)
-  end
+    validates :form, presence: true
+    validates :user, presence: true
+    validate :validate_field_values
 
-  protected
+    def initialize(attributes = {})
+      super
+      @form_entry = nil
 
-  def execute
-    @form_entry = create_form_entry
-    create_field_values
-  end
+      # Convert field_values hash to array if needed
+      @field_values = normalize_array_or_hash(@field_values)
+    end
 
-  private
+    protected
 
-  def create_form_entry
-    FormEntry.create!(
-      form: form,
-      user: user,
-      submitted_at: Time.current
-    )
-  end
+    def execute
+      @form_entry = create_form_entry
+      create_field_values
+    end
 
-  def create_field_values
-    field_values_to_create = normalize_array_or_hash(field_values)
+    private
 
-    field_values_to_create.each do |field_value_params|
-      next if field_value_params[:value].blank? && !field_required?(field_value_params[:form_field_id])
-      
-      @form_entry.field_values.create!(
-        form_field_id: field_value_params[:form_field_id],
-        value: field_value_params[:value]
+    def create_form_entry
+      FormEntry.create!(
+        form: form,
+        user: user,
+        submitted_at: Time.current
       )
     end
-  end
 
-  def validate_field_values
-    if field_values.blank?
-      errors.add(:field_values, "must have at least one field value")
-      return
+    def create_field_values
+      field_values_to_create = normalize_array_or_hash(field_values)
+
+      field_values_to_create.each do |field_value_params|
+        next if field_value_params[:value].blank? && !field_required?(field_value_params[:form_field_id])
+
+        @form_entry.field_values.create!(
+          form_field_id: field_value_params[:form_field_id],
+          value: field_value_params[:value]
+        )
+      end
     end
 
-    field_values_to_validate = normalize_array_or_hash(field_values)
+    def validate_field_values
+      if field_values.blank?
+        errors.add(:field_values, 'must have at least one field value')
+        return
+      end
 
-    field_values_to_validate.each_with_index do |field_value_params, index|
-      validate_field_value(field_value_params, index)
+      field_values_to_validate = normalize_array_or_hash(field_values)
+
+      field_values_to_validate.each_with_index do |field_value_params, index|
+        validate_field_value(field_value_params, index)
+      end
     end
   end
 end
