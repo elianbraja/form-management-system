@@ -1,0 +1,149 @@
+<div class="form-show-page">
+  <div class="page-header">
+    <h1><%= @form.title %></h1>
+    <div class="form-actions">
+      <% if @form.editable? %>
+        <%= link_to "Edit Form", edit_form_path(@form), class: "btn btn-outline" %>
+      <% else %>
+        <span class="btn btn-outline disabled" title="Form is locked because it has entries">Edit Form (Locked)</span>
+      <% end %>
+      <%= link_to "Back to Forms", forms_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <div class="form-details">
+    <div class="form-info">
+      <h2>Form Information</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <strong>Title:</strong>
+          <span><%= @form.title %></span>
+        </div>
+        <div class="info-item">
+          <strong>Created:</strong>
+          <span><%= @form.created_at.strftime("%B %d, %Y at %I:%M %p") %></span>
+        </div>
+        <div class="info-item">
+          <strong>Fields:</strong>
+          <span><%= @form.form_fields.count %></span>
+        </div>
+        <div class="info-item">
+          <strong>Entries:</strong>
+          <span><%= @form.form_entries.count %></span>
+        </div>
+        <div class="info-item">
+          <strong>Status:</strong>
+          <% if @form.editable? %>
+            <span class="status-editable">Editable</span>
+          <% else %>
+            <span class="status-locked">Locked</span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-fields">
+      <h2>Form Fields</h2>
+      <% if @form.form_fields.any? %>
+        <div class="fields-list">
+          <% @form.form_fields.each_with_index do |field, index| %>
+            <div class="field-item">
+              <div class="field-header">
+                <h3>Field <%= index + 1 %>: <%= field.name %></h3>
+                <span class="field-type-badge field-type-<%= field.field_type %>">
+                  <%= field.field_type.capitalize %>
+                </span>
+              </div>
+              
+              <div class="field-details">
+                <div class="field-property">
+                  <strong>Type:</strong> <%= field.field_type.capitalize %>
+                </div>
+                
+                <div class="field-property">
+                  <strong>Required:</strong> 
+                  <span class="<%= field.required? ? 'required' : 'optional' %>">
+                    <%= field.required? ? 'Yes' : 'No' %>
+                  </span>
+                </div>
+                
+                <% if field.validations.any? %>
+                  <div class="field-property">
+                    <strong>Validations:</strong>
+                    <ul class="validations-list">
+                      <% field.validations.each do |key, value| %>
+                        <li><%= key.humanize %>: <%= value %></li>
+                      <% end %>
+                    </ul>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <p>No fields have been added to this form yet.</p>
+          <%= link_to "Edit Form", edit_form_path(@form), class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="form-entries">
+      <div class="entries-header">
+        <h2>Form Entries</h2>
+        <div class="entries-actions">
+          <%= link_to "Add New Entry", new_form_form_entry_path(@form), class: "btn btn-primary" %>
+          <%= link_to "Download CSV", csv_export_form_form_entries_path(@form), class: "btn btn-outline" %>
+        </div>
+      </div>
+      
+      <% if @form.form_entries.any? %>
+        <div class="entries-info">
+        </div>
+        
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="field-column">Field</th>
+                <% @form.form_entries.includes(:user, :field_values).order(submitted_at: :asc).each_with_index do |entry, index| %>
+                  <th class="entry-column">
+                    Entry #<%= index + 1 %>
+                    <div class="entry-actions">
+                      <%= link_to "Edit", edit_form_form_entry_path(@form, entry), class: "btn btn-sm btn-outline" %>
+                    </div>
+                  </th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% @form.form_fields.each do |field| %>
+                <tr>
+                  <td class="field-column">
+                    <%= field.name %>
+                  </td>
+                  <% @form.form_entries.includes(:user, :field_values).order(submitted_at: :asc).each do |entry| %>
+                    <td class="entry-column">
+                      <% field_value = entry.field_values.find_by(form_field: field) %>
+                      <% if field_value&.value.present? %>
+                        <%= field_value.value %>
+                      <% else %>
+                        —
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <p>No entries have been submitted for this form yet.</p>
+          <p>Click "Add New Entry" to submit the first entry!</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

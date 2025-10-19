@@ -1,0 +1,187 @@
+<div class="form-page">
+  <div class="page-header">
+    <h1>Edit Form: <%= @form.title %></h1>
+    <div class="form-actions">
+      <%= link_to "View Form", form_path(@form), class: "btn btn-outline" %>
+      <%= link_to "Back to Forms", forms_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: @form_service, url: form_path(@form), method: :patch, local: true, id: "form-edit-form") do |form| %>
+      
+      <% if @form_service.errors.any? %>
+        <div class="error-messages">
+          <h3><%= pluralize(@form_service.errors.count, "error") %> prohibited this form from being saved:</h3>
+          <ul>
+            <% @form_service.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= form.label :title, "Form Title" %>
+        <%= form.text_field :title, class: "form-control", placeholder: "Enter form title" %>
+      </div>
+
+      <div class="fields-section">
+        <h3>Form Fields</h3>
+        <p class="field-help">Edit fields for your form. Each field can have different types and validations.</p>
+        
+        <div id="fields-container">
+          <% @form_service.fields.each_with_index do |field, index| %>
+            <div class="field-item">
+              <div class="field-header">
+                <h4>Field <%= index + 1 %></h4>
+                <% if index > 0 %>
+                  <button type="button" class="btn btn-sm btn-danger remove-field">Remove</button>
+                <% end %>
+              </div>
+              
+              <div class="field-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="field_<%= index %>_name">Field Name</label>
+                    <input type="text" name="forms_update_service[fields][<%= index %>][name]" id="field_<%= index %>_name" class="form-control" placeholder="e.g., First Name" value="<%= field[:name] %>">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="field_<%= index %>_type">Field Type</label>
+                    <select name="forms_update_service[fields][<%= index %>][field_type]" id="field_<%= index %>_type" class="form-control field-type-select">
+                      <option value="string" <%= 'selected' if field[:field_type] == 'string' %>>Text</option>
+                      <option value="integer" <%= 'selected' if field[:field_type] == 'integer' %>>Number</option>
+                      <option value="datetime" <%= 'selected' if field[:field_type] == 'datetime' %>>Date & Time</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="field_<%= index %>_required">Required</label>
+                    <input type="checkbox" name="forms_update_service[fields][<%= index %>][required]" id="field_<%= index %>_required" value="true" <%= 'checked' if field[:required] %>>
+                  </div>
+                </div>
+                
+                <div class="field-validations" data-field-type="string" style="<%= 'display: none;' unless field[:field_type] == 'string' %>">
+                  <h5>Validations</h5>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="field_<%= index %>_min_length">Minimum Length</label>
+                      <input type="number" name="forms_update_service[fields][<%= index %>][min_length]" id="field_<%= index %>_min_length" class="form-control" min="0" value="<%= field[:min_length] %>">
+                    </div>
+                    <div class="form-group">
+                      <label for="field_<%= index %>_max_length">Maximum Length</label>
+                      <input type="number" name="forms_update_service[fields][<%= index %>][max_length]" id="field_<%= index %>_max_length" class="form-control" min="0" value="<%= field[:max_length] %>">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="field-validations" data-field-type="integer" style="<%= 'display: none;' unless field[:field_type] == 'integer' %>">
+                  <h5>Validations</h5>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="field_<%= index %>_min_value">Minimum Value</label>
+                      <input type="number" name="forms_update_service[fields][<%= index %>][min_value]" id="field_<%= index %>_min_value" class="form-control" value="<%= field[:min_value] %>">
+                    </div>
+                    <div class="form-group">
+                      <label for="field_<%= index %>_max_value">Maximum Value</label>
+                      <input type="number" name="forms_update_service[fields][<%= index %>][max_value]" id="field_<%= index %>_max_value" class="form-control" value="<%= field[:max_value] %>">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="field-validations" data-field-type="datetime" style="<%= 'display: none;' unless field[:field_type] == 'datetime' %>">
+                  <p class="field-help">Date and time fields don't require additional validations.</p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        
+        <button type="button" id="add-field" class="btn btn-outline">+ Add Field</button>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "Update Form", class: "btn btn-primary" %>
+        <%= link_to "Cancel", form_path(@form), class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  let fieldIndex = <%= @form_service.fields.length %>;
+
+  document.getElementById('add-field').addEventListener('click', function() {
+    const container = document.getElementById('fields-container');
+    const template = container.querySelector('.field-item').cloneNode(true);
+    
+    // Update field number
+    template.querySelector('h4').textContent = `Field ${fieldIndex + 1}`;
+    
+    // Update all input names and IDs
+    template.querySelectorAll('input, select').forEach(input => {
+      const name = input.name.replace(/\[\d+\]/g, `[${fieldIndex}]`);
+      const id = input.id.replace(/\d+/g, fieldIndex);
+      input.name = name;
+      input.id = id;
+      
+      // Clear values
+      if (input.type === 'checkbox') {
+        input.checked = true;
+      } else {
+        input.value = '';
+      }
+    });
+    
+    // Update all label for attributes
+    template.querySelectorAll('label').forEach(label => {
+      const forAttr = label.getAttribute('for');
+      if (forAttr) {
+        label.setAttribute('for', forAttr.replace(/\d+/g, fieldIndex));
+      }
+    });
+    
+    // Add remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn btn-sm btn-danger remove-field';
+    removeBtn.textContent = 'Remove';
+    template.querySelector('.field-header').appendChild(removeBtn);
+    
+    container.appendChild(template);
+    fieldIndex++;
+    
+    updateFieldNumbers();
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-field')) {
+      e.target.closest('.field-item').remove();
+      updateFieldNumbers();
+    }
+  });
+
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('field-type-select')) {
+      const fieldItem = e.target.closest('.field-item');
+      const fieldType = e.target.value;
+      
+      fieldItem.querySelectorAll('.field-validations').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      const targetSection = fieldItem.querySelector(`[data-field-type="${fieldType}"]`);
+      if (targetSection) {
+        targetSection.style.display = 'block';
+      }
+    }
+  });
+
+  function updateFieldNumbers() {
+    const fields = document.querySelectorAll('.field-item');
+    fields.forEach((field, index) => {
+      field.querySelector('h4').textContent = `Field ${index + 1}`;
+    });
+  }
+</script>

@@ -1,0 +1,181 @@
+<div class="form-page">
+  <div class="page-header">
+    <h1>Create New Form</h1>
+    <%= link_to "Back to Forms", forms_path, class: "btn btn-secondary" %>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: @form_service, url: forms_path, method: :post, local: true, id: "form-creation-form") do |form| %>
+      <%= form.hidden_field :user_id %>
+      
+      <% if @form_service.errors.any? %>
+        <div class="error-messages">
+          <h3><%= pluralize(@form_service.errors.count, "error") %> prohibited this form from being saved:</h3>
+          <ul>
+            <% @form_service.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= form.label :title, "Form Title" %>
+        <%= form.text_field :title, class: "form-control", placeholder: "Enter form title" %>
+      </div>
+
+      <div class="fields-section">
+        <h3>Form Fields</h3>
+        <p class="field-help">Add fields to your form. Each field can have different types and validations.</p>
+        
+        <div id="fields-container">
+          <!-- First field is always present -->
+          <div class="field-item">
+            <div class="field-header">
+              <h4>Field 1</h4>
+            </div>
+            
+            <div class="field-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="field_0_name">Field Name</label>
+                  <input type="text" name="forms_create_service[fields][0][name]" id="field_0_name" class="form-control" placeholder="e.g., First Name">
+                </div>
+                
+                <div class="form-group">
+                  <label for="field_0_type">Field Type</label>
+                  <select name="forms_create_service[fields][0][field_type]" id="field_0_type" class="form-control field-type-select">
+                    <option value="string">Text</option>
+                    <option value="integer">Number</option>
+                    <option value="datetime">Date & Time</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="field_0_required">Required</label>
+                  <input type="checkbox" name="forms_create_service[fields][0][required]" id="field_0_required" value="true" checked>
+                </div>
+              </div>
+              
+              <div class="field-validations" data-field-type="string">
+                <h5>Validations</h5>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="field_0_min_length">Minimum Length</label>
+                    <input type="number" name="forms_create_service[fields][0][min_length]" id="field_0_min_length" class="form-control" min="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="field_0_max_length">Maximum Length</label>
+                    <input type="number" name="forms_create_service[fields][0][max_length]" id="field_0_max_length" class="form-control" min="0">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="field-validations" data-field-type="integer" style="display: none;">
+                <h5>Validations</h5>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="field_0_min_value">Minimum Value</label>
+                    <input type="number" name="forms_create_service[fields][0][min_value]" id="field_0_min_value" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label for="field_0_max_value">Maximum Value</label>
+                    <input type="number" name="forms_create_service[fields][0][max_value]" id="field_0_max_value" class="form-control">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="field-validations" data-field-type="datetime" style="display: none;">
+                <p class="field-help">Date and time fields don't require additional validations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button type="button" id="add-field" class="btn btn-outline">+ Add Field</button>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "Create Form", class: "btn btn-primary" %>
+        <%= link_to "Cancel", forms_path, class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  let fieldIndex = 1;
+
+  document.getElementById('add-field').addEventListener('click', function() {
+    const container = document.getElementById('fields-container');
+    const template = container.querySelector('.field-item').cloneNode(true);
+    
+    // Update field number
+    template.querySelector('h4').textContent = `Field ${fieldIndex + 1}`;
+    
+    // Update all input names and IDs
+    template.querySelectorAll('input, select').forEach(input => {
+      const name = input.name.replace(/\[\d+\]/g, `[${fieldIndex}]`);
+      const id = input.id.replace(/\d+/g, fieldIndex);
+      input.name = name;
+      input.id = id;
+      
+      // Clear values
+      if (input.type === 'checkbox') {
+        input.checked = true;
+      } else {
+        input.value = '';
+      }
+    });
+    
+    // Update all label for attributes
+    template.querySelectorAll('label').forEach(label => {
+      const forAttr = label.getAttribute('for');
+      if (forAttr) {
+        label.setAttribute('for', forAttr.replace(/\d+/g, fieldIndex));
+      }
+    });
+    
+    // Add remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn btn-sm btn-danger remove-field';
+    removeBtn.textContent = 'Remove';
+    template.querySelector('.field-header').appendChild(removeBtn);
+    
+    container.appendChild(template);
+    fieldIndex++;
+    
+    updateFieldNumbers();
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-field')) {
+      e.target.closest('.field-item').remove();
+      updateFieldNumbers();
+    }
+  });
+
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('field-type-select')) {
+      const fieldItem = e.target.closest('.field-item');
+      const fieldType = e.target.value;
+      
+      fieldItem.querySelectorAll('.field-validations').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      const targetSection = fieldItem.querySelector(`[data-field-type="${fieldType}"]`);
+      if (targetSection) {
+        targetSection.style.display = 'block';
+      }
+    }
+  });
+
+  function updateFieldNumbers() {
+    const fields = document.querySelectorAll('.field-item');
+    fields.forEach((field, index) => {
+      field.querySelector('h4').textContent = `Field ${index + 1}`;
+    });
+  }
+</script>
